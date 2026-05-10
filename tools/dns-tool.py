@@ -126,7 +126,7 @@ def check_dns(domain:str = None, record: List[str] = None, resolver: List[str] =
 
 #TEESTS
 
-check_dns("googleasdasdsa.com")                    # all recs
+check_dns("https://googleasdasdsa.com")                    # all recs
 check_dns("google.com")
 check_dns("cloudflare.com")
 check_dns("example.com")
