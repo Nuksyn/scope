@@ -10,7 +10,7 @@ import time
 
 
 # -------- Import config file completely, don't change it's small and it makes it simpler to use colors ------- #
-from config import *
+from .config import *
 
 # ---------- initialization of a console object for formatting ---------------- #
 console = Console()
@@ -153,10 +153,10 @@ def check_curl(domain:str, headers=None,cdn = None, redirects=None, cached=None,
                 for key,item in old_headers.items():
 
                     console.print(f"[{green}][+][/{green}] [{lblue}]{key} :: {item}[/{lblue}]")
-            hops += 1
-            console.print(f"[{ice}]── [{purple}]Hop {hops}[/{purple}] ────────────────────────────────────[{ice}]")
-            for keyz,valuez in headers.items():
-                console.print(f"[{green}][+][/{green}] [{lblue}]{keyz} :: {valuez}[/{lblue}]")
+        hops += 1
+        console.print(f"[{ice}]── [{purple}]Hop {hops}[/{purple}] ────────────────────────────────────[{ice}]")
+        for keyz,valuez in headers.items():
+            console.print(f"[{green}][+][/{green}] [{lblue}]{keyz} :: {valuez}[/{lblue}]")
 
 
     def curl_cached_retry(domain):
@@ -231,6 +231,4 @@ def check_curl(domain:str, headers=None,cdn = None, redirects=None, cached=None,
     if uf:
         curl_uf(data)
 
-check_curl("journeyofvitality.com")
-check_curl("cloudflare.com")
-check_curl("thisdomaindoesnotexist123.com")
+

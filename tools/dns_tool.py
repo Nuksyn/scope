@@ -11,14 +11,14 @@ import dns.resolver
 from typing import List
 
 # -------- Import config file completely, don't change it's small and it makes it simpler to use colors ------- #
-from config import *
+from .config import *
 
 
 # ---------- initialization of a console object for formatting ---------------- #
 console = Console()
 # ---------- initialization of a console object for formatting ---------------- #
 
-def check_dns(domain:str = None, record: List[str] = None, resolver: List[str] = None, ptr: str = None,spf:bool = False, dmarc: bool = False, caa: bool = False):
+def check_dns(domain, record: List[str] = None, resolver: List[str] = None, ptr: str = None,spf:bool = False, dmarc: bool = False, caa: bool = False):
     # ------------------------------ variables  ------------------------------ #
     optional_arguments = [spf,dmarc,caa] #create a list of optionals
     flags = (spf, dmarc, caa, ptr, record) #patch var for the last condition with no flags parsed
@@ -31,7 +31,11 @@ def check_dns(domain:str = None, record: List[str] = None, resolver: List[str] =
     dns_resolver = dns.resolver.Resolver() #create a resolver object
 
     if resolver:
-        dns_resolver.nameservers = resolver # < --- this is a list, loop over later
+        try:
+            dns_resolver.nameservers = resolver # < --- this is a list, loop over later
+        except Exception:
+            console.print(f"[{error}]\\[-][/{error}] [{purple}]{domain}[/{purple}] :: [{warning}]REALLY???????????[/{warning}]")
+
 
     # <------------------------- Preliminary checks for resolution-------------------------> #
     if not domain and not ptr:
@@ -50,6 +54,9 @@ def check_dns(domain:str = None, record: List[str] = None, resolver: List[str] =
                 return
             except dns.resolver.NoAnswer:
                 console.print(f"[{error}]\\[-][/{error}] [{purple}]{domain}[/{purple}] :: [{warning}]No active DNS zone detected[/{warning}]")
+                return
+            except Exception:
+                console.print(f"[{error}]\\[-][/{error}] [{purple}]{domain}[/{purple}] :: [{warning}]Weird domain![/{warning}]")
                 return
 
 
@@ -123,41 +130,3 @@ def check_dns(domain:str = None, record: List[str] = None, resolver: List[str] =
 
 
 
-
-#TEESTS
-
-check_dns("https://googleasdasdsa.com")                    # all recs
-check_dns("google.com")
-check_dns("cloudflare.com")
-check_dns("example.com")
-check_dns("google.com", spf=True)
-check_dns("gmail.com", spf=True)
-
-check_dns("google.com", dmarc=True)
-check_dns("example.com", dmarc=True)
-
-check_dns("google.com", caa=True)
-check_dns("example.com", caa=True)
-check_dns("google.com", record=["a", "mx"])
-check_dns("cloudflare.com", record=["txt", "ns"])
-check_dns("example.com", record=["AAAA", "MX", "TXT"])
-check_dns(ptr="8.8.8.8")
-check_dns(ptr="1.1.1.1")
-check_dns(ptr="8.8.4.4")
-check_dns("google.com", ptr="8.8.8.8", spf=True)
-check_dns("google.com", ptr="8.8.8.8", dmarc=True)
-check_dns("google.com", ptr="8.8.8.8", caa=True)
-check_dns("google.com", resolver=["1.1.1.1"])
-check_dns("google.com", resolver=["8.8.8.8"])
-check_dns("google.com", resolver=["9.9.9.9", "1.1.1.1"])
-check_dns("google.com", record=["banana"])
-check_dns("google.com", record=["email"])
-check_dns("google.com", record=["xyz"])
-check_dns("thisdomaindoesnotexist12345.com")
-check_dns("fake-domain-test.invalid")
-check_dns("google.com", resolver=["0.0.0.0"])
-check_dns("google.com", spf=True, dmarc=True, caa=True)
-check_dns("google.com", record=["MX", "A"], spf=True, caa=True)
-check_dns("")
-check_dns(None)
-check_dns("google.com", record=[])

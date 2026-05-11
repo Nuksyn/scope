@@ -11,7 +11,7 @@ import datetime
 from rich.console import Console
 
 # -------- Import config file completely, don't change it's small and it makes it simpler to use colors ------- #
-from config import *
+from .config import *
 
 # ---------- initialization of a console object for formatting ---------------- #
 console = Console()
@@ -110,44 +110,6 @@ def check_ssl(domain:str, cipher = None, expiry = None, issuer = None, sans = No
         ssl_sans(cert)
 
 
-# --------------------- TESTS ------------------------ #
 
-# ---- Normal valid SSL ---- #
-check_ssl("google.com")
 
-# ---- Cloudflare protected ---- #
-check_ssl("cloudflare.com")
 
-# ---- Expired certificate ---- #
-check_ssl("expired.badssl.com")
-
-# ---- Self-signed certificate ---- #
-check_ssl("self-signed.badssl.com")
-
-# ---- Wrong hostname ---- #
-check_ssl("wrong.host.badssl.com")
-
-# ---- SHA1 / weak cert ---- #
-check_ssl("sha1-intermediate.badssl.com")
-
-# ---- TLS version tests ---- #
-check_ssl("tls-v1-0.badssl.com")
-check_ssl("tls-v1-1.badssl.com")
-
-# ---- No SSL support ---- #
-check_ssl("http.badssl.com")
-
-# ---- Timeout / unreachable ---- #
-check_ssl("10.255.255.1")
-
-# ---- Cipher only ---- #
-check_ssl("google.com", cipher=True)
-
-# ---- Expiry only ---- #
-check_ssl("google.com", expiry=True)
-
-# ---- Issuer only ---- #
-check_ssl("google.com", issuer=True)
-
-# ---- SANS only ---- #
-check_ssl("google.com", sans=True)

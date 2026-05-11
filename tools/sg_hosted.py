@@ -12,7 +12,7 @@ import re
 # ------------------------- Import of not-mandatory Libs -------------------------#
 
 # -------- Import config file completely, don't change it's small and it makes it simpler to use colors ------- #
-from config import *
+from .config import *
 
 # ---------- initialization of a console object for formatting ---------------- #
 console = Console()
@@ -98,17 +98,6 @@ def check_sg_hosted(domain:str) -> bool:
 
 
 
-# <------------------------------------ Tests -----------------------------------> #
 
-print('Test 1: Expected result -> Hosted on SiteGround')
-check_sg_hosted("journeyofvitality.com") # Should return hosted
-print('Test 2: Expected result -> Not Hosted on SiteGround')
-check_sg_hosted("google.com") #Should return not hosted
-print('Test 3: Expected result -> Not Supported Format')
-check_sg_hosted("//asdasdasdasdasdsadas.com")  # should return incorrect format
-print("Test 4: Expected result -> Does not Exist or Unreachable")
-check_sg_hosted("asdasdasdasdasdsadas.com")  # should return does not exists
-
-# <----------------------------------End of Tests -----------------------------------> #
 
 

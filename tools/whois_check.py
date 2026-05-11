@@ -11,7 +11,7 @@ import whois
 import datetime
 
 # -------- Import config file completely, don't change it's small and it makes it simpler to use colors ------- #
-from config import *
+from .config import *
 
 # ---------- initialization of a console object for formatting ---------------- #
 console = Console()
@@ -152,15 +152,6 @@ def check_whois(domain:str, nameservers = None, registrar = None, dates = None, 
 
 
 
-
-#
-check_whois("github.com")
-check_whois("google.com")
-check_whois("python.org")
-check_whois("thisdomaindoesnotexist123456.com")
-check_whois("https://google.com")
-check_whois("")
-check_whois(None)
 
 
 

@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+# --------------------- doc ------------------------ #
+"""
+
+"""
+# --------------------- Import Tools ------------------------ #
+
+from tools.config import *
+from tools.sg_hosted import check_sg_hosted
+from tools.dns_tool import check_dns
+from tools.ssl_check import check_ssl
+from tools.whois_check import check_whois
+from tools.curlparse import check_curl
+from tools.quick_recon import quick_scope
+
+# --------------------- Import Libraries ------------------------ #
+import typer
+from typing import List
+from rich import console
+
+
+# ---------- initialization of a console object for formatting ---------------- #
+console = console.Console()
+# ---------- initialization of a console object for formatting ---------------- #
+
+#Initialize object for decorators
+app = typer.Typer()
+
+@app.command()
+def ssl(domain, cipher:bool = False, expiry:bool = False, issuer:bool = False, sans:bool = False, timeout:int=default_ssl_timeout):
+    check_ssl(domain,cipher, expiry, issuer, sans, timeout)
+
+@app.command()
+def recon(domain:str):
+    quick_scope(domain)
+
+@app.command()
+def whois(domain:str, nameservers:bool = False, registrar:bool = False, dates:bool=False, dnssec:bool = False, status:bool = False):
+    check_whois(domain, nameservers, registrar, dates, dnssec, status)
+
+@app.command()
+def dns(domain, record: List[str] = None, resolver: List[str] = None, ptr:bool = False,spf: bool = False, dmarc: bool = False, caa: bool = False):
+    check_dns(domain, record, resolver, ptr,spf, dmarc, caa)
+@app.command()
+def curl(domain:str, headers:bool=False,cdn:bool = False, redirects:bool=False, cached:bool=False,cache_test:bool =False, status_code:bool=False,verbose:bool=False, ttfb:bool=False,uf:bool=False, timeout:int=default_ssl_timeout):
+    check_curl(domain,headers,cdn,redirects,cached,cache_test, status_code,verbose, ttfb,uf, timeout)
+@app.command()
+def sg_hosted(domain:str):
+    check_sg_hosted(domain)
+@app.command()
+@app.command()
+def all(domain: str):
+    check_sg_hosted(domain)
+    check_dns(domain)
+    check_ssl(domain)
+    check_whois(domain)
+    check_curl(domain)
+
+if __name__ == "__main__":
+    app()
+
