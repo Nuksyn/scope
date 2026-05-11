@@ -10,9 +10,6 @@ import requests
 import re
 
 # ------------------------- Import of not-mandatory Libs -------------------------#
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning) #this fixes the error message for not secure
-#because we are using verify=False in the get request
 
 # -------- Import config file completely, don't change it's small and it makes it simpler to use colors ------- #
 from config import *
@@ -68,7 +65,7 @@ def check_sg_hosted(domain:str) -> bool:
 
     with console.status(f"[{purple}]Resolving...[/{purple}]"):
         try:
-            answer = requests.get(domain, verify=False, timeout=default_http_timeout, headers=headers)
+            answer = requests.get(domain, verify=False, timeout=default_http_timeout, headers=headers_ua)
             nginx_location_list = answer.text.split()
             pong = nginx_location_list[2]
             server = nginx_location_list[1]
@@ -103,14 +100,14 @@ def check_sg_hosted(domain:str) -> bool:
 
 # <------------------------------------ Tests -----------------------------------> #
 
-# print('Test 1: Expected result -> Hosted on SiteGround')
-# check_sg_hosted("journeyofvitality.com") # Should return hosted
-# print('Test 2: Expected result -> Not Hosted on SiteGround')
-# check_sg_hosted("google.com") #Should return not hosted
-# print('Test 3: Expected result -> Not Supported Format')
-# check_sg_hosted("//asdasdasdasdasdsadas.com")  # should return incorrect format
-# print("Test 4: Expected result -> Does not Exist or Unreachable")
-# check_sg_hosted("asdasdasdasdasdsadas.com")  # should return does not exists
+print('Test 1: Expected result -> Hosted on SiteGround')
+check_sg_hosted("journeyofvitality.com") # Should return hosted
+print('Test 2: Expected result -> Not Hosted on SiteGround')
+check_sg_hosted("google.com") #Should return not hosted
+print('Test 3: Expected result -> Not Supported Format')
+check_sg_hosted("//asdasdasdasdasdsadas.com")  # should return incorrect format
+print("Test 4: Expected result -> Does not Exist or Unreachable")
+check_sg_hosted("asdasdasdasdasdsadas.com")  # should return does not exists
 
 # <----------------------------------End of Tests -----------------------------------> #
 

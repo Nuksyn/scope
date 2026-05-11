@@ -34,6 +34,7 @@ def check_whois(domain:str, nameservers = None, registrar = None, dates = None, 
 
     #<----------------------------------- Functions used by the tool ----------------->
     def whois_registrar(whois_information):
+        console.print(f"[{ice}]── [{purple}]Registrar[/{purple}] ────────────────────────────────────[/{ice}]")
         registrar = whois_information.get("registrar")
         reseller_name = whois_information.get("reseller")
         whois_server = whois_information.get("whois_server")
@@ -56,7 +57,7 @@ def check_whois(domain:str, nameservers = None, registrar = None, dates = None, 
             console.print(f"[{error}]\\[x][/{error}] -- [{warning}]Registrar Url Not Found[/{warning}]")
 
     def whois_dates(whois_information):
-
+        console.print(f"[{ice}]── [{purple}]whois_date[/{purple}] ────────────────────────────────────[/{ice}]")
         def handle_dates_whois_fix(value):
             if value is None:
                 return None
@@ -88,15 +89,18 @@ def check_whois(domain:str, nameservers = None, registrar = None, dates = None, 
     # whois_dates(whois_information)
 
     def whois_nameservers(whois_information):
+        console.print(f"[{ice}]── [{purple}]Name Servers by Whois[/{purple}] ────────────────────────────────────[/{ice}]")
         nameservers = whois_information.get("name_servers")
         for name in nameservers:
             console.print(f"[{green}][+] == [/{green}][{lblue}]{name}[/{lblue}]")
 
     def whois_dnssec(whois_information):
+        console.print(f"[{ice}]── [{purple}]DNSSEC[/{purple}] ────────────────────────────────────[/{ice}]")
         dnss_sec_status = whois_information.get("dnssec")
         console.print(f"[{green}][+] >> [/{green}][{purple}]{dnss_sec_status}[/{purple}]")
 
     def whois_status(whois_information):
+        console.print(f"[{ice}]── [{purple}]STATUS[/{purple}] ────────────────────────────────────[/{ice}]")
         status_list = whois_information.get("status")
         if isinstance(status_list, list):
             for status in status_list:
