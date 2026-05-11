@@ -36,3 +36,4 @@ def check_for_updates():
             except Exception as e:
                 print("Something went wrong")
                 return
+check_for_updates()
