@@ -1,3 +1,4 @@
+version = "0.1.0-alpha"
 #<-------------------------- Config file -------------------------->
 """
 This is config file, DO NOT edit unless you know what you are doing.
@@ -5,7 +6,7 @@ This is config file, DO NOT edit unless you know what you are doing.
 #<-------------------------- Config file -------------------------->)
 
 #<-------------------------- UA  -------------------------->
-user_agent = "SGScope/0.1.0-alpha (SiteGround Support Recon Tool)" #You can edit this part as long as it stays a string and is not something mod_sec will trigger
+user_agent = f"SGScope/{version} (SiteGround Support Recon Tool)" #You can edit this part as long as it stays a string and is not something mod_sec will trigger
 #<-------------------------- UA  -------------------------->
 
 #<------------------------------- Global Libraries ---------------------------------->

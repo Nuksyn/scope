@@ -7,6 +7,7 @@
 from rich.console import Console
 import requests
 import time
+from math import floor
 
 
 # -------- Import config file completely, don't change it's small and it makes it simpler to use colors ------- #
@@ -165,7 +166,7 @@ def check_curl(domain:str, headers=None,cdn = None, redirects=None, cached=None,
         console.print(f"[{ice}]── [{purple}]Cache Testing[/{purple}] ────────────────────────────────────[{ice}]")
         with console.status(f"[{fog}]cURL...[/{fog}]"):
             try:
-                while counter < 11:
+                while counter < 10:
                     try:
                         data = requests.get(domain, verify=False, timeout=timeout, headers=headers_ua)
                     except Exception as e:
@@ -182,7 +183,7 @@ def check_curl(domain:str, headers=None,cdn = None, redirects=None, cached=None,
                             console.print(f"[{error}]\\[x][/{error}] >> [{warning}]No SG-Cache Info[/{warning}]")
 
                     counter += 1
-                console.print(f"[{purple}][*][{purple}][{ice}] {round((counter_cache / 10) * 100)}% of the requests were cached by SiteGround server[/{ice}]")
+                console.print(f"[{purple}][*][{purple}][{ice}] {floor((counter_cache / 10) * 100)}% of the requests were cached by SiteGround server[/{ice}]")
             except Exception as e:
                 console.print(f"[{error}]\\[x][/{error}] {e}!")
                 return
