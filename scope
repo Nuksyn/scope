@@ -2,8 +2,6 @@
 # --------------------- doc ------------------------ #
 """
 SGScope - SiteGround Support Recon Tool Main File
-
-
 """
 # --------------------- Import Tools ------------------------ #
 from tools.config import *
@@ -53,10 +51,16 @@ def curl(domain:str, headers: Optional[bool] = typer.Option(None, "--headers"), 
 
 @app.command()
 def sg_hosted(domain:str):
+
+
     check_sg_hosted(domain)
 
 @app.command()
 def all(domain: str):
+
+
+
+
     check_sg_hosted(domain)
     check_dns(domain)
     check_ssl(domain)
@@ -64,4 +68,11 @@ def all(domain: str):
     check_curl(domain)
 
 if __name__ == "__main__":
-    app()
+
+
+
+    # try:
+        app()
+
+    # except (KeyboardInterrupt, Abort):
+    #         console.print("\n[red]Interrupted by user[/red]")
