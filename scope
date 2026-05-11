@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
-
+#!/usr/bin/env python3.13
 # --------------------- doc ------------------------ #
 """
+SGScope - SiteGround Support Recon Tool Main File
+
 
 """
 # --------------------- Import Tools ------------------------ #
-
 from tools.config import *
 from tools.sg_hosted import check_sg_hosted
 from tools.dns_tool import check_dns
@@ -14,41 +14,47 @@ from tools.whois_check import check_whois
 from tools.curlparse import check_curl
 from tools.quick_recon import quick_scope
 
+
 # --------------------- Import Libraries ------------------------ #
 import typer
-from typing import List
+from typing import List, Optional
 from rich import console
 
 
-# ---------- initialization of a console object for formatting ---------------- #
-console = console.Console()
+
 # ---------- initialization of a console object for formatting ---------------- #
 
-#Initialize object for decorators
+
+console = console.Console()
+
+
+# ---------- initialization of a console object for formatting ---------------- #
 app = typer.Typer()
 
 @app.command()
-def ssl(domain, cipher:bool = False, expiry:bool = False, issuer:bool = False, sans:bool = False, timeout:int=default_ssl_timeout):
-    check_ssl(domain,cipher, expiry, issuer, sans, timeout)
+def ssl(domain:str, cipher: Optional[bool] = typer.Option(None, "--cipher"), expiry: Optional[bool] = typer.Option(None, "--expiry"), issuer: Optional[bool] = typer.Option(None, "--issuer"), sans: Optional[bool] = typer.Option(None, "--sans"), timeout: int = default_ssl_timeout):
+    check_ssl(domain, cipher, expiry , issuer , sans, timeout)
 
 @app.command()
 def recon(domain:str):
     quick_scope(domain)
 
 @app.command()
-def whois(domain:str, nameservers:bool = False, registrar:bool = False, dates:bool=False, dnssec:bool = False, status:bool = False):
+def whois(domain:str, nameservers: Optional[bool] = typer.Option(None, "--nameservers"), registrar: Optional[bool] = typer.Option(None, "--registrar"), dates: Optional[bool] = typer.Option(None, "--dates"), dnssec: Optional[bool] = typer.Option(None, "--dnssec"), status: Optional[bool] = typer.Option(None, "--status")):
     check_whois(domain, nameservers, registrar, dates, dnssec, status)
 
 @app.command()
-def dns(domain, record: List[str] = None, resolver: List[str] = None, ptr:bool = False,spf: bool = False, dmarc: bool = False, caa: bool = False):
-    check_dns(domain, record, resolver, ptr,spf, dmarc, caa)
+def dns(domain:str, record: Optional[List[str]] = typer.Option(None, "--record"), resolver: Optional[List[str]] = typer.Option(None, "--resolver"), ptr: Optional[str] = typer.Option(None, "--ptr"), spf: Optional[bool] = typer.Option(None, "--spf"), dmarc: Optional[bool] = typer.Option(None, "--dmarc"), caa: Optional[bool] = typer.Option(None, "--caa")):
+    check_dns(domain, record, resolver, ptr, spf, dmarc, caa)
+
 @app.command()
-def curl(domain:str, headers:bool=False,cdn:bool = False, redirects:bool=False, cached:bool=False,cache_test:bool =False, status_code:bool=False,verbose:bool=False, ttfb:bool=False,uf:bool=False, timeout:int=default_ssl_timeout):
-    check_curl(domain,headers,cdn,redirects,cached,cache_test, status_code,verbose, ttfb,uf, timeout)
+def curl(domain:str, headers: Optional[bool] = typer.Option(None, "--headers"), cdn: Optional[bool] = typer.Option(None, "--cdn"), redirects: Optional[bool] = typer.Option(None, "--redirects"), cached: Optional[bool] = typer.Option(None, "--cached"), status_code: Optional[bool] = typer.Option(None, "--status-code"), verbose: Optional[bool] = typer.Option(None, "--verbose"), ttfb: Optional[bool] = typer.Option(None, "--ttfb"), uf: Optional[bool] = typer.Option(None, "--uf"), timeout: int = default_http_timeout):
+    check_curl(domain, headers ,   cdn, redirects, cached,  status_code, verbose, ttfb, uf, timeout)
+
 @app.command()
 def sg_hosted(domain:str):
     check_sg_hosted(domain)
-@app.command()
+
 @app.command()
 def all(domain: str):
     check_sg_hosted(domain)
@@ -59,4 +65,3 @@ def all(domain: str):
 
 if __name__ == "__main__":
     app()
-

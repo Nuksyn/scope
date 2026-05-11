@@ -22,8 +22,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning) #this fixes 
 
 
 
-def check_curl(domain:str, headers=None,cdn = None, redirects=None, cached=None,cache_test =None, status_code=None,verbose=None, ttfb=None,uf=None, timeout=default_http_timeout):
-    optional_flags = [headers, cdn, redirects, cached, cache_test, status_code, verbose, ttfb, uf]
+def check_curl(domain:str, headers=None,cdn = None, redirects=None, cached=None, status_code=None,verbose=None, ttfb=None,uf=None, timeout=default_http_timeout):
+    optional_flags = [headers, cdn, redirects, cached, status_code, verbose, ttfb, uf]
     #<------------------------------- preliminary checks ------------------------------>
     if domain == None:
         console.print(f"[{error}]\\[x][/{error}] -- [{warning}]Don't try to trick the software![/{warning}]")
