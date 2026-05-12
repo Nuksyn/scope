@@ -1,8 +1,12 @@
-version = "0.2.0-alpha"
+version = "0.2.0-alpha"   #### Edit version to something custom to stop auto-updates (DONT RECOMMEND AT ALL)
+#if you want to re-enable auto-updates after that you will need to manually go to the folder of the script
+# and perform "git checkout ." and then force an update with "git pull"
 #<-------------------------- Config file -------------------------->
 """
 This is config file, DO NOT edit unless you know what you are doing.
+Here you can control the UA, the available colors and global headers used for the "requests" library, as well as timeout limits.
 """
+
 #<-------------------------- Config file -------------------------->)
 
 #<-------------------------- UA  -------------------------->
@@ -32,7 +36,6 @@ lblue  = "#8BE9FD"   # informational [*]
 
 #<-------------------------- Start of Global Settings -------------------------->
 default_http_timeout = 10
-default_records_for_dns = ["A", "AAAA", "MX", "NS", "TXT", "DS", "CAA"] #adding more records here may break the dns tool
 default_ssl_timeout = 10
 #<-------------------------- End of Global Settings -------------------------->
 
@@ -46,6 +49,7 @@ headers_ua = {
 }
 #<-------------------------- End of headers -------------------------->
 
+default_records_for_dns = ["A", "AAAA", "MX", "NS", "TXT", "DS", "CAA"] #adding or removing more records here may break the dns tool
 
 
 okay_codes = [200, 201, 202, 204, 206]
