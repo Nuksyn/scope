@@ -1,4 +1,4 @@
-version = "0.1.0-alpha"
+version = "0.2.0-alpha"
 #<-------------------------- Config file -------------------------->
 """
 This is config file, DO NOT edit unless you know what you are doing.
