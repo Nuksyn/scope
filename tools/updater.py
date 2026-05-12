@@ -43,11 +43,7 @@ def check_for_updates():
             try:
                 result = subprocess.run(["git", "pull"], capture_output=True, text=True)
                 console.print(f"[{green}][+] Successfully updated to {version}![/{green}]")
-                try:
-                    with open(data_file, "w") as f:
-                        f.write(datetime.now().strftime("%Y-%m-%d"))
-                except Exception as e:
-                    return
+
 
 
 
@@ -56,7 +52,11 @@ def check_for_updates():
                 console.print(f"[{error}]\\[x][/{error}] [{warning}]Update failed![/{warning}]")
                 return
 
-
+        try:
+            with open(data_file, "w") as f:
+                f.write(datetime.now().strftime("%Y-%m-%d"))
+        except Exception as e:
+            return
 
 
 
