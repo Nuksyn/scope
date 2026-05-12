@@ -8,7 +8,7 @@ This is config file, DO NOT edit unless you know what you are doing.
 #<-------------------------- UA  -------------------------->
 user_agent = f"SGScope/{version} (SiteGround Support Recon Tool)" #You can edit this part as long as it stays a string and is not something mod_sec will trigger
 #<-------------------------- UA  -------------------------->
-
+#
 #<------------------------------- Global Libraries ---------------------------------->
 
 import urllib3

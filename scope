@@ -11,13 +11,12 @@ from tools.ssl_check import check_ssl
 from tools.whois_check import check_whois
 from tools.curlparse import check_curl
 from tools.quick_recon import quick_scope
-
+from tools.updater import should_update
 
 # --------------------- Import Libraries ------------------------ #
 import typer
 from typing import List, Optional
 from rich import console
-
 
 
 # ---------- initialization of a console object for formatting ---------------- #
@@ -28,6 +27,10 @@ console = console.Console()
 
 # ---------- initialization of a console object for formatting ---------------- #
 app = typer.Typer()
+try:
+    should_update()
+except Exception as e:
+    pass
 
 @app.command()
 def ssl(domain:str, cipher: Optional[bool] = typer.Option(None, "--cipher"), expiry: Optional[bool] = typer.Option(None, "--expiry"), issuer: Optional[bool] = typer.Option(None, "--issuer"), sans: Optional[bool] = typer.Option(None, "--sans"), timeout: int = default_ssl_timeout):
@@ -71,8 +74,5 @@ if __name__ == "__main__":
 
 
 
-    # try:
-        app()
 
-    # except (KeyboardInterrupt, Abort):
-    #         console.print("\n[red]Interrupted by user[/red]")
+        app()
