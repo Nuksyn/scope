@@ -10,9 +10,20 @@ import requests
 from rich.console import Console
 import subprocess
 from config import *
+import os
+from datetime import datetime
 
+
+# < ----------------------- Getting current dir --------------------------->
+base_dir = os.path.dirname(os.path.abspath(__file__))
+dir_of_data_file = base_dir + "/../data/last_update.txt"
 
 console = Console()
+
+data_file = os.path.abspath(dir_of_data_file)
+
+
+
 def check_for_updates():
     with console.status("Checking for updates ..."):
         config_version_url = "https://raw.githubusercontent.com/Nuksyn/scope/master/tools/config.py"
@@ -20,20 +31,50 @@ def check_for_updates():
         try:
             data = requests.get(config_version_url)
         except Exception as e:
-            print("Something went wrong")
+            console.print(f"[{error}]\\[x][/{error}] [{warning}]Could not reach GitHub to check for updates[/{warning}]")
             return
 
 
         raw = data.text
         if version in raw:
-            print("This version is already up-to-date")
+            console.print(f"[{green}][+][/{green}] [{lblue}]Already up to date![/{lblue}]")
         else:
-            print("New update available, installing now!")
+            console.print(f"[{warning}][!][/{warning}] [{purple}]New update available, installing now...[/{purple}]")
             try:
                 result = subprocess.run(["git", "pull"], capture_output=True, text=True)
-                print(result.stdout)
-                print(result.returncode)
+                console.print(f"[{green}][+] Successfully updated to {version}![/{green}]")
+                try:
+                    with open(data_file, "w") as f:
+                        f.write(datetime.now().strftime("%Y-%m-%d"))
+                except Exception as e:
+                    return
+
+
+
+
             except Exception as e:
-                print("Something went wrong")
+                console.print(f"[{error}]\\[x][/{error}] [{warning}]Update failed![/{warning}]")
                 return
-check_for_updates()
+
+
+
+
+
+
+def should_update() -> bool:
+    try:
+        with open(data_file, "r") as f:
+            date_string = f.read().strip()
+    except Exception as e:
+        return True
+    last_check = datetime.strptime(date_string, "%Y-%m-%d")
+    current_time = datetime.now()
+    diff = current_time - last_check
+    if diff.days > 7:
+        check_for_updates()
+    else:
+        return False
+
+
+
+should_update()
