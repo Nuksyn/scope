@@ -1,82 +1,139 @@
-# scope — Domain Reconnaissance CLI
 
-A fast, terminal-native recon tool built for SiteGround support engineers and anyone doing domain investigation work. Run targeted checks or full recon with a single command.
 
-This is work in progress, if you have suggestions for the tool I would love to hear them and implement them further!
+
+
+# SGScope
+**SiteGround Support Recon & Diagnostic Tool**
+
+SGScope is a CLI utility for rapid reconnaissance of sites hosted on or moving to SiteGround[cite: 1]. It pulls DNS, SSL details, and SG-specific headers (Caching, CDN, and PHP type) into a single terminal view[cite: 1].
+
+## Quick Start
+
+1. **Install dependencies:**
+````
+   pip install -r requirements.txt
+   ````
+
+
+
+**Make it executable although in case it is not:**
+```bash
+chmod +x scope
+
+```
+
+
+3. **Test it:**
+```bash
+./scope recon domain.com
+
+
+```
+
+
+
+```
+
 ---
 
-## Install
+## Commands & Usage
 
+Use `./scope [COMMAND] --help` to see all available flags for a specific module[cite: 1].
+
+### General Recon
+Run the full suite (DNS, SSL, Curl, and SG info) in one go[cite: 1]:
 ```bash
-pip install -r requirements.txt
-chmod +x scope.py
+./scope recon domain.com
+
 ```
 
-## Usage
+### DNS Diagnostics
+
+Check specific records or run a full zone check:
 
 ```bash
-# Quick full recon
-python3 scope.py domain.com
+./scope dns domain.com --spf --dmarc
 
-# DNS lookups
-python3 scope.py dns domain.com
-python3 scope.py dns domain.com --record a --record mx
-python3 scope.py dns domain.com --ptr 142.250.185.78
-python3 scope.py dns domain.com --resolver 1.1.1.1
-python3 scope.py dns domain.com --spf
-python3 scope.py dns domain.com --dmarc
-python3 scope.py dns domain.com --caa
-
-# SSL certificate
-python3 scope.py ssl domain.com
-python3 scope.py ssl domain.com --cipher
-python3 scope.py ssl domain.com --expiry
-python3 scope.py ssl domain.com --issuer
-python3 scope.py ssl domain.com --sans
-python3 scope.py ssl domain.com --timeout 15
-
-# WHOIS
-python3 scope.py whois domain.com
-python3 scope.py whois domain.com --registrar
-python3 scope.py whois domain.com --dates
-python3 scope.py whois domain.com --nameservers
-python3 scope.py whois domain.com --dnssec
-python3 scope.py whois domain.com --status
-
-# HTTP analysis
-python3 scope.py curlparse domain.com
-python3 scope.py curlparse domain.com --headers
-python3 scope.py curlparse domain.com --redirects
-python3 scope.py curlparse domain.com --cached
-python3 scope.py curlparse domain.com --status-code
-python3 scope.py curlparse domain.com --ttfb
-python3 scope.py curlparse domain.com --tls
-python3 scope.py curlparse domain.com --cookies
-python3 scope.py curlparse domain.com --verbose
-python3 scope.py curlparse domain.com --uf
-python3 scope.py curlparse domain.com --timeout 15
-
-# SiteGround hosted check
-python3 scope.py sg-hosted domain.com
-
-# Run everything
-python3 scope.py all domain.com
 ```
+
+### SSL & TLS
+
+Extract cipher suites, expiry dates, and SANs:
+
+```bash
+./scope ssl domain.com --expiry --issuer
+
+```
+
+### Curl & Cache Analysis
+
+Check SiteGround NGINX cache performance and headers:
+
+```bash
+./scope curl domain.com --cached
+
+```
+
+The `--cached` flag runs 10 hits to calculate a hit/miss percentage.
+
+### WhoIs
+
+Quick registrar and expiration check:
+
+```bash
+./scope whois domain.com --registrar --dates
+
+```
+
+---
+
+## Configuration
+
+Customization (User-Agent, timeouts, colors) is handled in `tools/config.py`.
+
+**Updates:** The tool checks for updates on launch. To stop the tool from overwriting manual changes, change the `version` string in `main.py`.
 
 ## Dependencies
 
+* `typer` / `rich` (CLI & Formatting)
+
+
+* `requests` / `urllib3` (HTTP/SSL)
+
+
+* `dnspython` / `python-whois` (Network records)
+
+
+
+---
+
+### Technical Notes
+
+* **SSL Validation:** The tool defaults to `verify=False` so it doesn't crash when inspecting sites with broken or expired certificates.
+
+
+* **SG Ping:** The `sg_hosted` check relies on the `.well-known/sg-hosted-ping` endpoint.
+
+
+
 ```
-typer
-rich
-requests
-dnspython
-python-whois
+
+---
+
+### 🛠️ Mac ZSH Shortcut Setup
+To run `scope` from anywhere, paste this at the bottom of your `~/.zshrc` file:
+
+```zsh
+# SGScope Global Shortcut
+scope() {
+    source /path/to/your/sgscope/venv/bin/activate
+    python3 /path/to/your/sgscope/scope "$@"
+}
+
+#### Additionally!
+
+scope --install-completion
+#### and reset terminal
 ```
 
-
-- User agent: SGScope/0.1.0-alpha (SiteGround Support Recon Tool)
-- All output is copy-paste friendly — no table borders
-
-## Author
-
-Built by Nikola Nikolov Nikolov — SiteGround Support Team
+*(Make sure to change `/path/to/your/sgscope` to the actual folder path on your Mac.)*
