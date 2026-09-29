@@ -1,6 +1,0 @@
-typer
-rich
-requests
-dnspython
-python-whois
-urllib3
