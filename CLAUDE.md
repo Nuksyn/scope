@@ -23,6 +23,7 @@ There is an existing project at `https://github.com/Nuksyn/scope` — a Python C
 - Claude should proactively suggest a demo/test-in-PyCharm step whenever a new library, pattern, or non-obvious API is introduced, rather than waiting to be asked.
 - Claude does not write whole modules or commands for the user. Small illustrative snippets (a few lines, to show a pattern or a library call) are fine; full working implementations are not, even if asked for "just this once."
 - Claude keeps asking clarifying/design questions when scope or intent is ambiguous, rather than guessing and building the wrong thing.
+- **Keep answers very brief** — short and to the point; expand only when asked.
 - **Keep this file current.** Whenever the user states a preference or settles a decision (including items under "Still open"), Claude updates the relevant section of this file right away — moving resolved items out of "Still open", replacing outdated statements rather than appending contradictions — and briefly tells the user what changed. Preferences that are personal or must not appear in the public repo go to Claude's local memory instead.
 
 ## Architecture principles
@@ -40,6 +41,7 @@ There is an existing project at `https://github.com/Nuksyn/scope` — a Python C
 - **Always-on, rotating error log** (size- or age-based rotation, e.g. 5MB or 30 days) via the standard `logging` module — every caught exception is logged with domain + traceback, regardless of verbosity. No `--debug` flag for now; that can be added later if needed.
 - **Verbosity via counted flags** (`-v`, `-vv`, `-vvv`), read only by the render layer — the underlying check methods always fetch and return full data regardless of verbosity.
 - **External/network-sourced strings must be treated as untrusted** wherever they reach Rich's markup-parsing console output (headers, WHOIS fields, DNS TXT records, etc.) — escape before printing. This is a known gap to close before the tool handles real customer data, even though it was deprioritized during early feature planning.
+- **No root/admin access, ever.** The tool must install and run entirely as a normal user (e.g. on a work Mac without admin rights): user-space install (pipx/`uv`), no `sudo`, no system-wide writes. Features must avoid anything needing privileges — e.g. `ping`/`troute` use the system `ping`/`traceroute` binaries or an unprivileged mode (like `icmplib`'s), never raw sockets/`scapy`. Config, logs, and data files live in the user's home directory.
 - **Config file in TOML**, user-editable by hand or via an interactive `config` command (arrow-key menu, built with `questionary`) that writes the file back out.
 
 ## The "helpers" section
@@ -83,6 +85,8 @@ The point: one object, constructed with a title and a border style, handles its 
 | `deepscan` | Slower composite: DNSSEC/SOA-TTL/propagation (via `dns` flags) + `email` + `geo` + anything else "more than a quick check." Exact contents to settle during build. |
 | `config` | Interactive TOML config editor (arrow-key menu via `questionary`). |
 
+Global flag: `scope --version` (an eager option on the `@app.callback()`), not a `version` command. The version is read from the installed package metadata (`importlib.metadata`), so `pyproject.toml` is the single source of truth.
+
 ## Explicitly out of scope (decided during planning, don't reintroduce without asking)
 
 REPL mode, batch/bulk domain input, caching, expiry watch/alerting, diff/history mode, side-by-side domain comparison, WordPress/CMS fingerprinting, SMTP deep check, exposed-sensitive-file scanner, server software fingerprinting, CORS header check, domain-transfer-readiness check, datacenter/region confirmation, headless-browser/JS-error checks, mypy/static typing (for now), auto-formatting tools (for now), authoritative-nameserver-consistency check (propagation check covers this), www/apex consistency check, explicit domain-age surfacing, typosquat/similar-domain check.
@@ -93,6 +97,7 @@ REPL mode, batch/bulk domain input, caching, expiry watch/alerting, diff/history
 - **Freeze the old code first**: `git tag v0.2.0-legacy` on the current `master`, pushed, before any rewrite work starts — this guarantees the old working tool is always recoverable via `git checkout v0.2.0-legacy`, independent of how far the rewrite progresses.
 - **All rewrite work happens on a branch** (e.g. `v2-rewrite`), not directly on `master`, so `master` isn't left in a half-broken state while the rewrite is in progress.
 - **Merge back to `master` with a regular `git merge`** (not squash) once the rewrite is usable — this preserves each commit's original date, which also matters for GitHub's contribution graph: only commits on the default branch (or `gh-pages`) count toward it, and a squash merge would collapse the whole branch's work into a single commit dated the merge day, losing the graph's reflection of the actual work timeline. A plain merge retroactively fills in the graph with the real commit dates once merged.
+- **The user makes all commits and pushes themselves.** Claude doesn't run `git add`/`commit`/`push`; instead it gives the exact commands to run, each with a one-line explanation, plus a suggested commit message.
 - Tag the merged result (e.g. `v0.3.0`) once it lands on `master`.
 - Before committing on the branch, confirm `git config user.email` matches a **verified email on the GitHub account** — commits with an unverified/mismatched email silently don't count toward the contribution graph, and this is easiest to fix before many commits pile up under the wrong email.
 
