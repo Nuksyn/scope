@@ -16,7 +16,7 @@ There is an existing project at `https://github.com/Nuksyn/scope` — a Python C
 
 - **The user writes all production code themselves.** Claude's job is to teach, guide, and review — not to hand over finished files.
 - When a new library or pattern is needed, Claude's default move is to give the user a **small, runnable demo script** they can open in PyCharm and actually run, so they see the library's behavior firsthand (e.g. "run this against `dnspython` to see what a `NoAnswer` exception actually looks like") — *then* the user writes the real version themselves, with Claude reviewing/correcting rather than authoring.
-- **Two demo files per new library, created by Claude, in `sandbox/`** (gitignored, never committed):
+- **Two demo files per new library, created by Claude, in `sandbox/<library>_demos/`** (grouped by the library they mainly demonstrate, e.g. `sandbox/rich_demos/`; gitignored, never committed):
   - `<library>_demo.py` — the **terminal** version: Claude gives the exact commands to run and what to look for in the output.
   - `<library>_debug.py` — the **PyCharm** version: runs with the plain Run/Debug button, no arguments or setup needed (hardcoded inputs/scenarios), with suggested breakpoint spots so the user can step through it in the debugger.
   - Never name them `test_*.py`: they hit the real network and are not pytest tests (real tests live in `tests/`).
@@ -24,6 +24,10 @@ There is an existing project at `https://github.com/Nuksyn/scope` — a Python C
 - Claude does not write whole modules or commands for the user. Small illustrative snippets (a few lines, to show a pattern or a library call) are fine; full working implementations are not, even if asked for "just this once."
 - Claude keeps asking clarifying/design questions when scope or intent is ambiguous, rather than guessing and building the wrong thing.
 - **Keep answers very brief** — short and to the point; expand only when asked.
+- **Explain every command or test snippet Claude gives**: what each part does, briefly, piece by piece. Never hand over an unexplained one-liner.
+- **Every piece of code the user writes gets reviewed by Claude**, and any possible optimisation is pointed out each time (as a short snippet or explanation; the user applies it).
+- **Don't repeat yourself:** never write the same logic twice. If something already exists (e.g. in `helpers/`), reuse it. When duplication appears, factor it out.
+- **Readability is mandatory:** code must be very easy to read, even where advanced techniques are used. That means clear names, small functions and a short comment wherever a technique isn't obvious. If a clever version is harder to read, prefer the plain one. Imports are grouped (stdlib, blank line, third-party, blank line, local), but **not** sorted alphabetically within a group.
 - **Keep this file current.** Whenever the user states a preference or settles a decision (including items under "Still open"), Claude updates the relevant section of this file right away — moving resolved items out of "Still open", replacing outdated statements rather than appending contradictions — and briefly tells the user what changed. Preferences that are personal or must not appear in the public repo go to Claude's local memory instead.
 
 ## Architecture principles
@@ -40,8 +44,14 @@ There is an existing project at `https://github.com/Nuksyn/scope` — a Python C
 - **Parallel execution for composite commands** — `recon` (and similar) run their sub-checks concurrently via `concurrent.futures.ThreadPoolExecutor`, collecting all results before printing anything (so output stays in a fixed, readable order despite concurrent execution).
 - **Always-on, rotating error log** (size- or age-based rotation, e.g. 5MB or 30 days) via the standard `logging` module — every caught exception is logged with domain + traceback, regardless of verbosity. No `--debug` flag for now; that can be added later if needed.
 - **Verbosity via counted flags** (`-v`, `-vv`, `-vvv`), read only by the render layer — the underlying check methods always fetch and return full data regardless of verbosity.
-- **External/network-sourced strings must be treated as untrusted** wherever they reach Rich's markup-parsing console output (headers, WHOIS fields, DNS TXT records, etc.) — escape before printing. This is a known gap to close before the tool handles real customer data, even though it was deprioritized during early feature planning.
+- **External/network-sourced strings must be treated as untrusted** wherever they reach Rich's markup-parsing console output (headers, WHOIS fields, DNS TXT records, etc.) — handled by `Printer`, which builds lines from Rich `Text` objects (never parsed as markup).
 - **No root/admin access, ever.** The tool must install and run entirely as a normal user (e.g. on a work Mac without admin rights): user-space install (pipx/`uv`), no `sudo`, no system-wide writes. Features must avoid anything needing privileges — e.g. `ping`/`troute` use the system `ping`/`traceroute` binaries or an unprivileged mode (like `icmplib`'s), never raw sockets/`scapy`. Config, logs, and data files live in the user's home directory.
+- **Cross-platform: Linux, macOS and Windows.** Every feature must work on all three:
+  - Paths use `pathlib`, never hardcoded `/` or `~` strings.
+  - Config, log and data directories come from per-OS user directories (e.g. `platformdirs`).
+  - System binaries differ per OS (`ping -c` vs `ping -n`, `traceroute` vs `tracert`), so detect the OS and build the command accordingly, or use a pure-Python unprivileged alternative.
+  - No shell-specific syntax or POSIX-only modules without a fallback.
+  - CI runs the tests on all three OSes.
 - **Config file in TOML**, user-editable by hand or via an interactive `config` command (arrow-key menu, built with `questionary`) that writes the file back out.
 
 ## The "helpers" section
@@ -50,7 +60,7 @@ A dedicated shared module/package (e.g. `domainscope/helpers/`) for logic reused
 
 ## New formatting system (replaces ad hoc `console.print` borders)
 
-The old code hand-writes Unicode border lines (`══════...`) and titles inline, in every check module, with inconsistent spacing and Rich markup easy to get wrong. Replace this with a dedicated formatting class in the helpers module — something like:
+The old code hand-writes Unicode border lines (`══════...`) and titles inline, in every check module, with inconsistent spacing and Rich markup easy to get wrong. Replace this with a dedicated formatting class in the helpers module. The original sketch was a header-only `Section` class (superseded by `Printer` below):
 
 ```python
 class Section:
@@ -63,6 +73,26 @@ class Section:
 ```
 
 The point: one object, constructed with a title and a border style, handles its own width/centering/coloring — no check module should ever hand-build a border string again. This should be one of the first pieces built, since every other check's output depends on it.
+
+**Decided scope (expanded beyond headers):** this is a general-purpose output class — **`Printer`, in `helpers/printer.py`** — used by the render layer for everything it prints:
+- section headers (left-aligned title, generic — e.g. "SSL Certificate", **never the domain in the border**), the content lines inside a section, and closing/footer lines; content is left-aligned with no extra indent;
+- lines in the old tool's **nmap style**: `[+]` ok / `[!]` warn / `[x]` fail / `[-]` negative/absent / `[*]` info, then `label :: value` — **no emoji/unicode icons**. The marker is **optional per line** and used only where a status matters (e.g. a check passed/failed); plain data lists (e.g. HTTP response headers) have no markers;
+- info lines are laid out with **Rich `Table.grid`** (label column auto-sized, long values wrap inside the value column) instead of fixed-width `:<N` padding;
+- **automatic marker selection** from the value when requested (e.g. bool → `[+]`/`[x]`, days-to-expiry → `[+]`/`[!]`/`[x]`), or an explicit status, or none;
+- colours from a named palette (the old tool's palette as a starting point; can be changed freely);
+- input echo (showing the target being checked);
+- **optional prompt support** in the `[?] Question` style (Rich `Prompt`/`Confirm`), meant for the `config` setup wizard, not for normal check output;
+- escapes all values by default (untrusted network data), so markup injection / `MarkupError` can't happen;
+- width: the **whole output** (header, rows and footer) has one fixed width, a constant of 90 columns, shrinking to the terminal width when the terminal is narrower.
+
+**Decided design:**
+- Status is an **`Enum`** (e.g. `Status.OK`, `.WARN`, `.FAIL`, `.ABSENT`, `.INFO`), never plain strings.
+- The printer only *displays* a status; **domain thresholds** (e.g. SSL "< 14 days = warn") live with the relevant check/renderer. Generic bool → `[+]`/`[x]` is fine in the printer.
+- Colours are named styles in a Rich **`Theme`** (e.g. `"ok"`, `"label"`), not hex codes in strings — later loadable from the TOML config.
+- Lines are built with Rich **`Text`** objects, so untrusted data is safe by construction (no reliance on remembering `escape()`).
+- **`Printer` creates and owns its own `Console`** (no console injection) and has one job: printing. Tests capture its output with pytest's `capsys` instead.
+- Sections are a **context manager**: `with printer.section("SSL Certificate"): ...` prints the header on enter and the footer on exit. Lines added inside a section are **collected**, and the section's grid (header, aligned rows, footer) is printed together when the `with` block ends — a grid needs all rows to size its columns. Internally, `section()` calls small private helpers, `_header(title)` and `_footer()`. The header looks like `════ Title ═════…`: the `═` lead-in and the line are in the `"header"` style and only the title is in the `"title"` style (mint green). The footer is a `═` rule in `"header"`. **Fixed width:** the console itself is capped at the width constant (90) in `__init__`, so header, rows and footer all share it. It's never wider than the terminal, and never fitted to the content. The header always starts with the `═` lead-in, never with the title.
+Prototype of the building blocks: `sandbox/rich_demos/printer_demo.py`.
 
 ## Command structure (final short names)
 
@@ -103,6 +133,17 @@ REPL mode, batch/bulk domain input, caching, expiry watch/alerting, diff/history
 
 ## Tests belong in the repo
 
+- **Every production file gets its pytest tests as soon as the file is complete**, before moving on to the next one: `tests/test_<module>.py`. The user writes them, and Claude guides and reviews. Tests must run in GitHub Actions, which means:
+- no real network;
+- no terminal-size or OS assumptions;
+- passing on Linux, macOS and Windows.
+
+CI runs on every push and pull request.
+
+Planned (set up once the first real test exists):
+- a local git **pre-commit hook** that runs pytest and blocks the commit on failure;
+- **GitHub Actions** CI running pytest on Linux, macOS and Windows;
+- a **branch protection** rule on `master` requiring CI to pass before merging.
 - `tests/` sits alongside `src/`, not inside it (`pytest` finds it automatically).
 - Any fixture/mock data a test needs (sample DNS responses, fake WHOIS records, recorded HTTP cassettes if `vcr.py`/`pytest-recording` is the chosen mocking approach) is committed too — a test with no fixture to replay against is useless in CI.
 - If recorded HTTP cassettes are used, scrub any real secrets/customer data from them before committing — they become permanent repo history once pushed.
@@ -121,4 +162,4 @@ Confirmed to be a small, low-effort piece once the `.mmdb` file and PHP's `geoip
 - OCSP stapling check inclusion
 - Mocking approach for tests (`unittest.mock` vs `pytest-httpx`/`responses` vs `vcr.py`)
 - pipx as the install method — deferred to post-development testing on macOS
-- Rich markup escaping — deferred, but flagged as a pre-launch requirement
+- Abstract base classes (e.g. `BaseCheck`, `BaseResult`, `BaseRenderer`, CDN detector base) — to discuss later
