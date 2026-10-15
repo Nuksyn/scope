@@ -5,6 +5,7 @@ from rich.console import Console
 from rich.theme import Theme
 from rich.text import Text
 from rich.rule import Rule
+from rich.table import Table
 
 
 class Status(Enum):
@@ -14,6 +15,12 @@ class Status(Enum):
     FAIL = "[x]"
     ABSENT = "[-]"
     INFO = "[*]"
+
+    @classmethod
+    def from_bool(cls, ok):
+        if ok:
+            return cls.OK
+        return cls.FAIL
 
 
 THEME = Theme({
@@ -39,6 +46,7 @@ class Printer:
     def __init__(self):
         self._console = Console(theme=THEME, highlight=False)
         self._console.width = min(HEADER_WIDTH, self._console.width)
+        self._rows = []
 
     def _rule(self, title=""):
         self._console.print(Rule(title, style="header", align="left", characters="═"))
@@ -49,11 +57,35 @@ class Printer:
 
     def _footer(self):
         self._rule()
+        self._console.print()
 
     @contextmanager
     def section(self, title):
-        self._header(title)
+        self._rows = []
         try:
             yield
         finally:
+            self._header(title)
+            self._console.print(self._grid(self._rows))
             self._footer()
+
+    def line(self, label, value, status=None):
+        self._rows.append((status, label, value))
+
+    def target(self, value):
+        self._console.print(self._grid([(Status.INFO, "Target", value)]))
+
+    def _grid(self, rows):
+        """Builds the grid from the given rows."""
+        grid = Table.grid(padding=(0, 1))
+        grid.add_column(no_wrap=True)
+        grid.add_column(style="label", no_wrap=True)
+        grid.add_column(no_wrap=True)
+        grid.add_column(style="value")
+        for status, label, value in rows:
+            marker = Text(status.value, style=status.name.lower()) if status else Text("")
+            grid.add_row(marker, Text(label), Text("::"), Text(str(value)))
+        return grid
+
+
+
