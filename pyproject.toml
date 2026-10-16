@@ -10,6 +10,7 @@ requires-python = ">=3.11"
 dependencies = [
     "typer",
     "rich",
+    "idna",
 ]
 
 [project.optional-dependencies]
