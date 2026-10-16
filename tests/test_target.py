@@ -43,6 +43,7 @@ def test_parse_ip(raw, expected):
     "1.1.1.0/24",
     "1.1.1.1/24",  # host bits set
     "2606:4700::/32",  # IPv6 range
+    "ex@mple.com",  # character with @
     "https://",  # no host
     "",   # empty input
 ])

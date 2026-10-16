@@ -34,6 +34,12 @@ class Target(ABC):
         if "/" not in cleaned:
             return
         raise InvalidTargetError(f"{cleaned!r} is a CIDR range; give a single IP or domain")
+    @staticmethod
+    def _reject_at_sign(cleaned: str) -> None:
+        """Raise InvalidTargetError if the input contains '@' (email or URL login)."""
+        if "@" in cleaned:
+            raise InvalidTargetError(f"{cleaned!r} contains '@'; give a domain or IP, "
+                                     "not an email address")
 
     @staticmethod
     def _as_ip(cleaned: str) -> IPv4Address | IPv6Address | None:
@@ -84,6 +90,7 @@ class Target(ABC):
         """Turn raw user input into an IPTarget or DomainTarget."""
         cleaned = cls._clean(raw)
         cls._reject_cidr(cleaned)
+        cls._reject_at_sign(cleaned)
 
         host = cleaned if cls._as_ip(cleaned) is not None \
             else cls._extract_host(cleaned)
