@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
 from urllib.parse import urlsplit
+import string
 
 import idna
 
 from domainscope.exceptions import InvalidTargetError, InvalidDomainError
 
+ALLOWED = set(string.ascii_lowercase + string.digits + "-_")
 
 class Target(ABC):
     """A parsed domain or IP; create one with Target.parse()."""
@@ -61,6 +63,22 @@ class Target(ABC):
             raise InvalidDomainError(f"{host!r} is not a valid "
                                      "domain name") from e
 
+    @staticmethod
+    def _validate_domain(host: str) -> None:
+        """Raise InvalidDomainError if host breaks DNS naming rules."""
+        if len(host) > 253:
+            raise InvalidDomainError(f"{host!r} is too long")
+        labels = host.split(".")
+        for label in labels:
+            if not 1 <= len(label) <= 63:
+                raise InvalidDomainError(f"{host!r} is too long or too short (empty)")
+            if label.startswith("-") or label.endswith("-"):
+                raise InvalidDomainError(f"{host!r} label starts or ends with dash.")
+            if not all(ch in ALLOWED for ch in label):
+                raise InvalidDomainError(f"{host!r} is not a valid domain name")
+        if labels[-1].isdigit():
+            raise InvalidDomainError(f"{host!r}: the TLD can't be all digits")
+
     @classmethod
     def parse(cls, raw: str) -> "DomainTarget | IPTarget":
         """Turn raw user input into an IPTarget or DomainTarget."""
@@ -70,9 +88,11 @@ class Target(ABC):
         host = cleaned if cls._as_ip(cleaned) is not None \
             else cls._extract_host(cleaned)
         ip = cls._as_ip(host)
-        if ip:
+        if ip is not None:
             return IPTarget(ip)
-        return DomainTarget(cls._to_punycode(host))
+        final_domain = cls._to_punycode(host)
+        cls._validate_domain(final_domain)
+        return DomainTarget(final_domain)
 
 
 @dataclass(frozen=True)

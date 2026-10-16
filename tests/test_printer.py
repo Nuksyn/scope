@@ -22,7 +22,6 @@ def test_from_bool():
     assert check_one is Status.OK
     assert check_two is Status.FAIL
 
-
 def test_section(capsys):
     result = section_lines_helper(capsys, "Issuer", "R11", Status.OK)
     assert result[0].startswith(HEADER_LEAD + "SSL Certificate")

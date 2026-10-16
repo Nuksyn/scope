@@ -17,6 +17,7 @@ def main(
     show_version: bool = typer.Option(
         False, "--version", "-V", callback=_version_callback, is_eager=True,
         help="Show the version and exit.")):
-    """Domain Scoping Tool, offering a variety of utilities helping the system administrator or hosting engineer/technician"""
+    """Domain Scoping Tool, offering a variety of utilities helping
+    the system administrator or hosting engineer/technician"""
 
 
