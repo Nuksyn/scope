@@ -64,11 +64,13 @@ A dedicated shared module/package (e.g. `domainscope/helpers/`) for logic reused
 
 ## Findings layer (cross-cutting)
 
+- `Finding` and its `Severity` enum live in **`helpers/findings.py`**: a shared, logic-free shape built before any check.
 - Every check result dataclass carries a list of **`Finding`** objects:
   - severity: critical / warning / info;
   - a short code, e.g. `DNSSEC_BROKEN`;
   - a plain-language message: what's wrong and what it means.
 - The render layer prints **findings first and prominently**; raw data comes after.
+- Findings can be hidden: a `show_findings` setting in the TOML config (default `true`) sets the default, and a `--no-findings` flag overrides it for one run. Render layer only (checks always produce findings); `--json` always includes them.
 - `recon` applies **correlation rules** across results to surface root causes. Examples:
   - domain on clientHold/serverHold, or expired/in redemption;
   - DNSSEC DS present but the zone is unsigned, or keys mismatched;
@@ -158,7 +160,7 @@ Prototype of the building blocks: `sandbox/rich_demos/printer_demo.py`.
 | data status (name TBD) | Shows the age of every local data source (GeoLite2, each cloud range list), with a refresh option. |
 | resolver identity (placement TBD) | See "Resolver identity" — own command or part of a self-diagnostics command. |
 
-Global flags: `--json` (machine-readable output, a separate render path) and `-v`/`-vv`/`-vvv`. `scope --version` (an eager option on the `@app.callback()`), not a `version` command. The version is read from the installed package metadata (`importlib.metadata`), so `pyproject.toml` is the single source of truth.
+Global flags: `--json` (machine-readable output, a separate render path), `-v`/`-vv`/`-vvv` and `--no-findings`. `scope --version` (an eager option on the `@app.callback()`), not a `version` command. The version is read from the installed package metadata (`importlib.metadata`), so `pyproject.toml` is the single source of truth.
 
 ## Explicitly out of scope (decided during planning, don't reintroduce without asking)
 
