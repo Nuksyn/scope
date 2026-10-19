@@ -7,6 +7,8 @@ from rich.text import Text
 from rich.rule import Rule
 from rich.table import Table
 
+from domainscope.helpers.findings import Severity, Finding
+
 
 class Status(Enum):
     """Result status class, acts as mapper for the sign depending on the status type"""
@@ -21,6 +23,16 @@ class Status(Enum):
         if ok:
             return cls.OK
         return cls.FAIL
+
+    @classmethod
+    def from_severity(cls, severity: Severity):
+        """Return the marker Status for a finding's Severity."""
+        severity_mapper = {
+            Severity.CRITICAL: cls.FAIL,
+            Severity.WARNING: cls.WARN,
+            Severity.INFO: cls.INFO,
+        }
+        return severity_mapper[severity]
 
 
 THEME = Theme({
@@ -71,6 +83,10 @@ class Printer:
 
     def line(self, label, value, status=None):
         self._rows.append((status, label, value))
+
+    def finding(self, finding: Finding):
+        """Add one finding as a row: marker from severity, code as label, message as value."""
+        self.line(status=Status.from_severity(finding.severity), label=finding.code, value=finding.message)
 
     def target(self, value):
         self._console.print(self._grid([(Status.INFO, "Target", value)]))

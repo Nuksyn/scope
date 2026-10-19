@@ -1,3 +1,6 @@
+import pytest
+
+from domainscope.helpers.findings import Severity, Finding
 from domainscope.helpers.printer import Printer, Status, HEADER_LEAD
 
 
@@ -38,3 +41,42 @@ def test_line_without_status(capsys):
 def test_markup_is_not_parsed(capsys):
     result = section_lines_helper(capsys, "TXT", "[red]hi[/]")
     assert result[1] == " TXT :: [red]hi[/]"
+
+
+@pytest.mark.parametrize("severity, expected", [
+    (Severity.CRITICAL, Status.FAIL),
+    (Severity.INFO, Status.INFO),
+    (Severity.WARNING, Status.WARN),
+])
+def test_severity_matching_status(severity, expected):
+    assert Status.from_severity(severity) is expected
+
+
+@pytest.mark.parametrize("severity", [
+    None,
+    "AI is coming after our jobs",
+    "kekw",
+    2,
+    "CRITICAL",
+])
+def test_severity_invalid_input(severity):
+    with pytest.raises(KeyError):
+        Status.from_severity(severity)
+
+
+@pytest.mark.parametrize("severity",
+    list(Severity)
+)
+def test_that_every_severity_is_mapped(severity):
+    assert isinstance(Status.from_severity(severity), Status)
+
+
+# @pytest.mark.parametrize("severity", [])
+
+def test_finding_order_and_values(capsys):
+    printer = Printer()
+    f = Finding(Severity.CRITICAL, "NGINX_DOMAIN", "Domain is not registered yet")
+    with printer.section("Findings"):
+        printer.finding(f)
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[1] == "[x] NGINX_DOMAIN :: Domain is not registered yet"
